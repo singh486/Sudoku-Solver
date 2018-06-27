@@ -5,12 +5,44 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:layout_centerVertical="true"
+    <!--<TextView-->
+        <!--android:layout_centerVertical="true"-->
+        <!--android:layout_centerHorizontal="true"-->
+        <!--android:id="@+id/textView2"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="Solve"-->
+        <!--android:textAppearance="@style/Base.TextAppearance.AppCompat.Large" />-->
+
+    <Button
+        android:id="@+id/btnCamera"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="91dp"
+        android:text="Take Picture"
+        android:textColor="#ffd3ffe5"
+        android:textStyle="bold" />
+
+
+    <ImageView
+        android:id="@+id/capturedImage"
+        android:layout_width="249dp"
+        android:layout_height="323dp"
+        android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:id="@+id/textView2"
+        android:layout_marginTop="28dp"></ImageView>
+
+    <Button
+        android:id="@+id/btnNext"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Solve"
-        android:textAppearance="@style/Base.TextAppearance.AppCompat.Large" />
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="12dp"
+        android:layout_marginEnd="18dp"
+        android:text=">>" />
+
+
 </RelativeLayout>
