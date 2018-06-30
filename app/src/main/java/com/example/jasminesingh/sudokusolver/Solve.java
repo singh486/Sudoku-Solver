@@ -12,9 +12,13 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.media.Image;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.FileProvider;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
@@ -31,6 +35,11 @@ import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.UUID;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -41,6 +50,7 @@ public class Solve extends Fragment {
     private TextView result;
     Bitmap bp;
     String imageText = "";
+    File imgFile;
 
 
     @Override
@@ -86,6 +96,7 @@ public class Solve extends Fragment {
                 exit.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        imgFile.delete();
                         alert.dismiss();
                     }
                 });
@@ -94,6 +105,7 @@ public class Solve extends Fragment {
                 done.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        imgFile.delete();
 
                     }
                 });
@@ -111,9 +123,45 @@ public class Solve extends Fragment {
         return v;
     }
 
+    String mCurrentPhotoPath;
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        mCurrentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+
     private void openCamera() {
-        Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(intent, 0);
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (takePictureIntent.resolveActivity(getContext().getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(getContext(),
+                        "com.example.android.fileprovider",
+                        photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, 0);
+            }
+        }
+
     }
 
     @Override
@@ -121,24 +169,25 @@ public class Solve extends Fragment {
         // TODO Auto-generated method stub
         super.onActivityResult(requestCode, resultCode, data);
         if(resultCode == RESULT_OK) {
-            bp = (Bitmap) data.getExtras().get("data");
+            imgFile = new File(mCurrentPhotoPath);
+            if(imgFile.exists()){
+                bp = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
 
-            TextRecognizer textRecognizer = new TextRecognizer.Builder(getContext()).build();
+                TextRecognizer textRecognizer = new TextRecognizer.Builder(getContext()).build();
 
-            Frame imageFrame = new Frame.Builder()
+                Frame imageFrame = new Frame.Builder()
+                        .setBitmap(bp)                 // your image bitmap
+                        .build();
 
-                    .setBitmap(bp)                 // your image bitmap
-                    .build();
 
+                SparseArray<TextBlock> textBlocks = textRecognizer.detect(imageFrame);
 
-            SparseArray<TextBlock> textBlocks = textRecognizer.detect(imageFrame);
-
-            for (int i = 0; i < textBlocks.size(); i++) {
-                TextBlock textBlock = textBlocks.get(textBlocks.keyAt(i));
-                imageText = textBlock.getValue();                   // return string
+                for (int i = 0; i < textBlocks.size(); i++) {
+                    TextBlock textBlock = textBlocks.get(textBlocks.keyAt(i));
+                    imageText = textBlock.getValue();                   // return string
+                }
+                capturedImage.setImageBitmap(bp);
             }
-
-            capturedImage.setImageBitmap(bp);
         }
     }
 
